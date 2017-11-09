@@ -42,9 +42,10 @@ namespace FFXIVPartyLogs
 				JObject jObject = null;
 				foreach (JObject j in jArray) jObject = j;
 				JArray specs = (JArray)jObject["specs"];
+				jObject = null;
 				foreach (JObject j in specs)
 				{
-					if ((string)j["sepc"] == Spec)
+					if ((string)j["spec"] == Spec)
 					{
 						jObject = j;
 						break;
@@ -52,8 +53,13 @@ namespace FFXIVPartyLogs
 				}
 				if (jObject != null)
 				{
-					PerSecondAmount = (int)jObject["specs"][0]["best_persecondamount"];
-					Percentile = (double)jObject["specs"][0]["best_historical_percent"];
+					PerSecondAmount = (int)jObject["best_persecondamount"];
+					Percentile = (double)jObject["best_historical_percent"];
+				}
+				else
+				{
+					PerSecondAmount = 0;
+					Percentile = 0;
 				}
 			}
 		}

@@ -9,26 +9,20 @@ namespace FFXIVPartyLogs
 {
 	static class FFLogsHelper
 	{
-		public struct Encounter
+		private struct Zone
 		{
-			public int id;
-			public string name;
-		}
-		public struct Zone
-		{
-			public int id;
 			public string name;
 			public bool frozen;
-			public List<Encounter> encounters;
+			public Dictionary<int, string> encounters;
 		}
 
-		public static List<Zone> Zones = null;
+		private static Dictionary<int, Zone> Zones;
 
 		private static string FFLogsAPI = "https://www.fflogs.com:443/v1";
 		private static string ParsesAPI = "/parses/character/{0}/{1}/{2}?";
 		private static string ZonesAPI = "/zones?";
 		private static string APIKey = "1dc6b9e941157540fd28c9de961fcd41";
-	
+
 		static FFLogsHelper()
 		{
 			UpdateZones();
@@ -54,9 +48,30 @@ namespace FFXIVPartyLogs
 			return result;
 		}
 
-		public static void UpdateZones()
+		public static Dictionary<int, string> GetZones()
 		{
-			Zones = new List<Zone>();
+			UpdateZones();
+			Dictionary<int, string> result = new Dictionary<int, string>();
+			foreach (int id in Zones.Keys)
+			{
+				result[id] = Zones[id].name;
+			}
+			return result;
+		}
+
+		public static Dictionary<int, string> GetEncounters(int zoneID)
+		{
+			return Zones[zoneID].encounters;
+		}
+
+		public static bool IsZoneFrozen(int zoneID)
+		{
+			return Zones[zoneID].frozen;
+		}
+
+		private static void UpdateZones()
+		{
+			Zones = new Dictionary<int, Zone>();
 			using (WebClient webClient = new WebClient())
 			{
 				string url = FFLogsAPI + ZonesAPI + "api_key=" + APIKey;
@@ -66,22 +81,17 @@ namespace FFXIVPartyLogs
 				{
 					Zone zone = new Zone
 					{
-						id = (int)jZone["id"],
 						name = (string)jZone["name"],
 						frozen = (bool)jZone["frozen"]
 					};
-					List<Encounter> encounters = new List<Encounter>();
+					Dictionary<int, string> encounters = new Dictionary<int, string>();
 					JArray jEncounters = (JArray)jZone["encounters"];
 					foreach (JObject jEncounter in jEncounters)
 					{
-						Encounter encounter = new Encounter
-						{
-							id = (int)jEncounter["id"],
-							name = (string)jEncounter["name"]
-						};
-						encounters.Add(encounter);
+						encounters[(int)jEncounter["id"]] = (string)jEncounter["name"];
 					}
 					zone.encounters = encounters;
+					Zones[(int)jZone["id"]] = zone;
 				}
 			}
 		}
